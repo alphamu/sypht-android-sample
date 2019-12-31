@@ -186,7 +186,7 @@ class MainActivity : AppCompatActivity(),
                 // Get Graph client and get user
                 Prefs.instance.setAccessToken(accessToken);
                 GraphHelper.instance?.getUser(getUserCallback())
-                getEmailsWithAttachments()
+                getRecentFiles()
             }
 
             override fun onError(exception: MsalException) { // Check the type of exception and handle appropriately
