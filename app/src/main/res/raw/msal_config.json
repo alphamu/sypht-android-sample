@@ -1,0 +1,15 @@
+{
+  "client_id" : "ec3f95b1-4fd8-49ec-b003-9abba38bae60",
+  "redirect_uri" : "msauth://com.alimuzaffar.sypht.onedrive/callback",
+  "broker_redirect_uri_registered": false,
+  "account_mode": "SINGLE",
+  "authorities" : [
+    {
+      "type": "AAD",
+      "audience": {
+        "type": "AzureADandPersonalMicrosoftAccount"
+      },
+      "default": true
+    }
+  ]
+}
