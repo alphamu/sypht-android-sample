@@ -27,7 +27,13 @@ import java.io.InputStream
 class EmailsFragment : Fragment(), EmailsAdapter.OnItemTap {
     val allowedContentTypes =
         arrayOf("application/pdf", "application/png", "application/jpeg", "application/jpg")
-    val displayFields = arrayOf("invoice.tax", "invoice.gst", "invoice.total", "invoice.amountDue", "invoice.dueDate")
+    val displayFields = arrayOf(
+        "invoice.tax",
+        "invoice.gst",
+        "invoice.total",
+        "invoice.amountDue",
+        "invoice.dueDate"
+    )
     val mapIds = mutableMapOf<String, String>()
 
     private lateinit var recyclerView: RecyclerView
@@ -103,10 +109,11 @@ class EmailsFragment : Fragment(), EmailsAdapter.OnItemTap {
     }
 
     override fun onItemTap(message: Message) {
-        (activity as MainActivity).showProgressBar()
-        GlobalScope.launch {
-            var display = ""
-            mapIds[message.id]?.let { sid ->
+        val sid = mapIds[message.id]
+        if (sid != null) {
+            (activity as MainActivity).showProgressBar()
+            GlobalScope.launch {
+                var display = ""
                 JSONObject(sypht.result(sid)).takeIf { result ->
                     result.getString("status") == "FINALISED"
                 }?.let { it ->
@@ -124,10 +131,10 @@ class EmailsFragment : Fragment(), EmailsAdapter.OnItemTap {
                         (activity as MainActivity).hideProgressBar()
                         Toast.makeText(context, display, Toast.LENGTH_LONG).show()
                     }
-
                 }
             }
-
+        } else {
+            Toast.makeText(context, "Attachment still uploading, or not is a PDF or Image.", Toast.LENGTH_LONG).show()
         }
 
     }
