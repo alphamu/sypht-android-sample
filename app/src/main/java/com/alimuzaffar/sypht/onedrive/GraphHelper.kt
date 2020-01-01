@@ -8,6 +8,7 @@ import com.microsoft.graph.models.extensions.User
 import com.microsoft.graph.options.HeaderOption
 import com.microsoft.graph.options.QueryOption
 import com.microsoft.graph.requests.extensions.GraphServiceClient
+import com.microsoft.graph.requests.extensions.IAttachmentCollectionPage
 import com.microsoft.graph.requests.extensions.IDriveRecentCollectionPage
 import com.microsoft.graph.requests.extensions.IMessageCollectionPage
 import java.io.InputStream
@@ -62,12 +63,15 @@ class GraphHelper private constructor() : IAuthenticationProvider {
         // https://graph.microsoft.com/v1.0/me/messages?$filter=hasAttachments+eq+true&$select=sender,subject,hasAttachments
         return mClient.me().messages().buildRequest(
             listOf(
-                QueryOption(
-                    "\$filter",
-                    "hasAttachments eq true"
-                ), QueryOption("\$select", "subject,sender,hasAttachments")
+//                QueryOption(""\$filter", "hasAttachments eq true"),
+//                QueryOption("\$select", "subject,sender,hasAttachments"),
+                QueryOption("\$orderby", "receivedDateTime desc")
             )
         )[callback]
+    }
+
+    fun getAttachmentsForEmail(emailId: String, callback: ICallback<IAttachmentCollectionPage>) {
+        return mClient.me().messages().byId(emailId).attachments().buildRequest()[callback]
     }
 
     companion object {

@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
@@ -22,6 +23,7 @@ import com.google.android.material.navigation.NavigationView
 import com.microsoft.graph.concurrency.ICallback
 import com.microsoft.graph.core.ClientException
 import com.microsoft.graph.models.extensions.User
+import com.microsoft.graph.requests.extensions.IAttachmentCollectionPage
 import com.microsoft.graph.requests.extensions.IDriveRecentCollectionPage
 import com.microsoft.graph.requests.extensions.IMessageCollectionPage
 import com.microsoft.identity.client.AuthenticationCallback
@@ -34,12 +36,15 @@ import com.sypht.SyphtClient
 import com.sypht.auth.BasicCredentialProvider
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.InputStream
 
 
 class MainActivity : AppCompatActivity(),
     NavigationView.OnNavigationItemSelectedListener {
+    val allowedContentTypes =
+        arrayOf("application/pdf", "application/png", "application/jpeg", "application/jpg")
     private lateinit var mDrawer: DrawerLayout
     private lateinit var mNavigationView: NavigationView
     private lateinit var mHeaderView: View
@@ -186,7 +191,7 @@ class MainActivity : AppCompatActivity(),
                 // Get Graph client and get user
                 Prefs.instance.setAccessToken(accessToken);
                 GraphHelper.instance?.getUser(getUserCallback())
-                getRecentFiles()
+                getEmailsWithAttachments()
             }
 
             override fun onError(exception: MsalException) { // Check the type of exception and handle appropriately
@@ -240,9 +245,36 @@ class MainActivity : AppCompatActivity(),
     }
 
     fun getEmailsWithAttachments() {
-        GraphHelper.instance?.getEmailsWithAttachments(object: ICallback<IMessageCollectionPage> {
+        GraphHelper.instance?.getEmailsWithAttachments(object : ICallback<IMessageCollectionPage> {
             override fun success(page: IMessageCollectionPage) {
                 Log.d("MESSAGES", "Recent: " + page.rawObject.toString())
+                page.currentPage.forEach { message ->
+                    val id = message.id
+                    GraphHelper.instance?.getAttachmentsForEmail(
+                        id,
+                        object : ICallback<IAttachmentCollectionPage> {
+                            override fun success(attach: IAttachmentCollectionPage) {
+                                attach.currentPage.forEach {
+                                    val contentType = it.contentType
+                                    if (allowedContentTypes.contains(contentType)) {
+                                        val name = it.name
+                                        val contentBytes = it.rawObject["contentBytes"].asString
+                                        val bytes = Base64.decode(contentBytes, Base64.NO_WRAP)
+                                        val stream = ByteArrayInputStream(bytes)
+                                        GlobalScope.launch {
+                                            sendToSypht(name, stream)
+                                            //No need to close the stream, the SDk does this for us.
+                                        }
+                                    }
+                                }
+                            }
+
+                            override fun failure(ex: ClientException?) {
+                                Log.e("ATTACHMENT", "Error getting /me/messages/{}/attachments", ex)
+                            }
+                        })
+                }
+
             }
 
             override fun failure(ex: ClientException?) {
@@ -296,16 +328,30 @@ class MainActivity : AppCompatActivity(),
     }
 
     fun sendToSypht(file: File) {
-        val sypht = SyphtClient(
-            BasicCredentialProvider(
-                getString(R.string.sypht_client_id),
-                getString(R.string.sypht_client_secret)
-            )
-        )
-
-        val syphtFileId = sypht.upload(file.name, BufferedInputStream(file.inputStream()))
-        val syphtResult = sypht.result(syphtFileId)
+        val syphtFileId = getSyphtClient(this).upload(file)
+        val syphtResult = getSyphtClient(this).result(syphtFileId)
         Log.d("SYPHT", syphtResult)
+    }
+
+
+    fun sendToSypht(name: String, inputStream: InputStream) {
+        val syphtFileId = getSyphtClient(this).upload(name, inputStream)
+        val syphtResult = getSyphtClient(this).result(syphtFileId)
+        Log.d("SYPHT", syphtResult)
+    }
+
+    companion object {
+        private lateinit var sypht: SyphtClient
+        fun getSyphtClient(context: Context): SyphtClient {
+            if (!::sypht.isInitialized)
+                sypht = SyphtClient(
+                    BasicCredentialProvider(
+                        context.getString(R.string.sypht_client_id),
+                        context.getString(R.string.sypht_client_secret)
+                    )
+                )
+            return sypht
+        }
     }
 
 }
