@@ -15,6 +15,7 @@ import com.alimuzaffar.sypht.onedrive.MainActivity
 import com.alimuzaffar.sypht.onedrive.R
 import com.alimuzaffar.sypht.onedrive.adapter.EmailsAdapter
 import com.alimuzaffar.sypht.onedrive.util.GraphHelper
+import com.alimuzaffar.sypht.onedrive.util.MapIds
 import com.microsoft.graph.concurrency.ICallback
 import com.microsoft.graph.core.ClientException
 import com.microsoft.graph.models.extensions.Message
@@ -39,7 +40,7 @@ class EmailsFragment : Fragment(),
         "invoice.amountDue",
         "invoice.dueDate"
     )
-    val mapIds = mutableMapOf<String, String?>()
+    private lateinit var mapIds: MapIds
 
     private lateinit var recyclerView: RecyclerView
 
@@ -58,6 +59,7 @@ class EmailsFragment : Fragment(),
         getSyphtClient(
             context
         )
+        mapIds = MapIds.instance
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -81,40 +83,14 @@ class EmailsFragment : Fragment(),
                 }
                 page.currentPage.forEach { message ->
                     val emailId = message.id
-                    GraphHelper.instance?.getAttachmentsForEmail(
-                        emailId,
-                        object : ICallback<IAttachmentCollectionPage> {
-                            override fun success(attach: IAttachmentCollectionPage) {
-                                attach.currentPage.forEach {
-                                    val contentType = it.contentType
-                                    if (allowedContentTypes.contains(contentType)) {
-                                        val attachmentName = it.name
-                                        val contentBytes = it.rawObject["contentBytes"].asString
-                                        val bytes = Base64.decode(contentBytes, Base64.NO_WRAP)
-                                        val stream = ByteArrayInputStream(bytes)
-                                        GlobalScope.launch {
-                                            mapIds[emailId] = null
-                                            val syphtId = sendToSypht(attachmentName, stream)
-                                            mapIds[emailId] = syphtId
-                                            //No need to close the stream, the SDk does this for us.
-                                            activity?.runOnUiThread {
-                                                recyclerView.visibility =
-                                                    if (mapIds.values.any { v ->
-                                                            v == null
-                                                        }) View.INVISIBLE else {
-                                                        (activity as MainActivity).hideProgressBar(); View.VISIBLE
-                                                    }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            override fun failure(ex: ClientException?) {
-                                Log.e("ATTACHMENT", "Error getting /me/messages/{}/attachments", ex)
-                            }
-                        })
+                    if (!mapIds.containsKey(emailId)) {
+                        // Email has not been seen before
+                        // fetch attachments and send to sypht
+                        fetchAttachmentsForEmail(emailId)
+                    }
                 }
+                // If nothing is waiting upload, show the emails list
+                showEmailList()
 
             }
 
@@ -124,10 +100,49 @@ class EmailsFragment : Fragment(),
         })
     }
 
+    fun fetchAttachmentsForEmail(emailId: String) {
+        GraphHelper.instance?.getAttachmentsForEmail(
+            emailId,
+            object : ICallback<IAttachmentCollectionPage> {
+                override fun success(attach: IAttachmentCollectionPage) {
+                    attach.currentPage.forEach {
+                        val contentType = it.contentType
+                        if (allowedContentTypes.contains(contentType)) {
+                            mapIds[emailId] =
+                                null //This indicates the file has been encountered, but has not been upload yet
+                            val attachmentName = it.name
+                            val contentBytes = it.rawObject["contentBytes"].asString
+                            val bytes = Base64.decode(contentBytes, Base64.NO_WRAP)
+                            val stream = ByteArrayInputStream(bytes)
+                            GlobalScope.launch {
+                                val syphtId = sendToSypht(attachmentName, stream)
+                                mapIds[emailId] = syphtId
+                                // No need to close the stream, the SDK does this for us.
+                                // If nothing if awaiting upload, show the email list
+                                showEmailList()
+                            }
+                        }
+                    }
+                }
+
+                override fun failure(ex: ClientException?) {
+                    Log.e("ATTACHMENT", "Error getting /me/messages/{}/attachments", ex)
+                }
+            })
+    }
+
     fun sendToSypht(name: String, inputStream: InputStream): String {
         val syphtFileId =
             sypht.upload(name, inputStream, arrayOf("sypht.invoice"))
         return syphtFileId
+    }
+
+    fun showEmailList() {
+        activity?.runOnUiThread {
+            recyclerView.visibility = if (mapIds.hasLoading()) View.INVISIBLE else {
+                (activity as MainActivity).hideProgressBar(); View.VISIBLE
+            }
+        }
     }
 
     override fun onItemTap(message: Message) {

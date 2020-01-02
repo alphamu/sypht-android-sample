@@ -23,6 +23,7 @@ import com.alimuzaffar.sypht.onedrive.fragment.EmailsFragment
 import com.alimuzaffar.sypht.onedrive.fragment.HomeFragment
 import com.alimuzaffar.sypht.onedrive.util.AuthenticationHelper
 import com.alimuzaffar.sypht.onedrive.util.GraphHelper
+import com.alimuzaffar.sypht.onedrive.util.MapIds
 import com.alimuzaffar.sypht.onedrive.util.Prefs
 import com.google.android.material.navigation.NavigationView
 import com.microsoft.graph.concurrency.ICallback
@@ -57,7 +58,7 @@ class MainActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Prefs.init(this)
+        Prefs.init(this.applicationContext)
         // Set the toolbar
         val toolbar =
             findViewById<Toolbar>(R.id.toolbar)
@@ -182,6 +183,7 @@ class MainActivity : AppCompatActivity(),
         mAuthHelper.signOut()
         setSignedInState(false)
         openHomeFragment(mUserName)
+        Prefs.instance.clear()
     }
 
     // Silently sign in - used if there is already a
@@ -202,7 +204,7 @@ class MainActivity : AppCompatActivity(),
                 val accessToken = authenticationResult.accessToken
                 Log.d("AUTH", String.format("Access token: %s", accessToken))
                 // Get Graph client and get user
-                Prefs.instance.setAccessToken(accessToken);
+                Prefs.instance.setAccessToken(accessToken)
                 GraphHelper.instance?.getUser(getUserCallback())
             }
 
@@ -236,6 +238,8 @@ class MainActivity : AppCompatActivity(),
                 Log.d("AUTH", "User: " + user.displayName)
                 mUserName = user.displayName
                 mUserEmail = if (user.mail == null) user.userPrincipalName else user.mail
+                Prefs.instance.setEmail(mUserEmail!!)
+                MapIds.init(this@MainActivity.applicationContext)
                 runOnUiThread {
                     hideProgressBar()
                     setSignedInState(true)

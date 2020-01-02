@@ -103,6 +103,21 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/util/AuthenticationHelper.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/util/IdsMap.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/util/MapIds.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/util/Prefs.kt">
           <value>
             <set />

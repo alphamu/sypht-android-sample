@@ -3,6 +3,7 @@ package com.alimuzaffar.sypht.onedrive.util
 import android.content.Context
 import android.content.SharedPreferences
 import com.alimuzaffar.sypht.onedrive.util.Prefs.Key.ACCESS_TOKEN
+import com.alimuzaffar.sypht.onedrive.util.Prefs.Key.EMAIL
 
 /*
  * A Singleton for managing your SharedPreferences.
@@ -43,6 +44,7 @@ class Prefs private constructor(context: Context) {
          * String: SAMPLE_KEY, SAMPLE_STR or just SAMPLE
          */
         const val ACCESS_TOKEN = "access_token"
+        const val EMAIL = "email"
     }
 
     fun put(key: String?, `val`: String?) {
@@ -216,6 +218,14 @@ class Prefs private constructor(context: Context) {
 
     fun getAccessToken(): String {
         return getString(ACCESS_TOKEN, "")!!
+    }
+
+    fun setEmail(email:String) {
+        put(EMAIL, email)
+    }
+
+    fun getEmail(): String? {
+        return getString(EMAIL)
     }
 
     companion object {
