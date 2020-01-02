@@ -1,8 +1,9 @@
-package com.alimuzaffar.sypht.onedrive
+package com.alimuzaffar.sypht.onedrive.util
 
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import com.alimuzaffar.sypht.onedrive.R
 import com.microsoft.identity.client.AuthenticationCallback
 import com.microsoft.identity.client.IPublicClientApplication.ISingleAccountApplicationCreatedListener
 import com.microsoft.identity.client.ISingleAccountPublicClientApplication
@@ -47,7 +48,8 @@ class AuthenticationHelper private constructor(ctx: Context) {
         @Synchronized
         fun getInstance(ctx: Context): AuthenticationHelper? {
             if (INSTANCE == null) {
-                INSTANCE = AuthenticationHelper(ctx)
+                INSTANCE =
+                    AuthenticationHelper(ctx)
             }
             return INSTANCE
         }
@@ -63,7 +65,8 @@ class AuthenticationHelper private constructor(ctx: Context) {
     }
 
     init {
-        PublicClientApplication.createSingleAccountPublicClientApplication(ctx, R.raw.msal_config,
+        PublicClientApplication.createSingleAccountPublicClientApplication(ctx,
+            R.raw.msal_config,
             object : ISingleAccountApplicationCreatedListener {
                 override fun onCreated(application: ISingleAccountPublicClientApplication) {
                     mPCA = application

@@ -1,4 +1,4 @@
-package com.alimuzaffar.sypht.onedrive
+package com.alimuzaffar.sypht.onedrive.fragment
 
 import android.content.Context
 import android.os.Bundle
@@ -11,6 +11,10 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.alimuzaffar.sypht.onedrive.adapter.EmailsAdapter
+import com.alimuzaffar.sypht.onedrive.util.GraphHelper
+import com.alimuzaffar.sypht.onedrive.MainActivity
+import com.alimuzaffar.sypht.onedrive.R
 import com.microsoft.graph.concurrency.ICallback
 import com.microsoft.graph.core.ClientException
 import com.microsoft.graph.models.extensions.Message
@@ -24,7 +28,8 @@ import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
-class EmailsFragment : Fragment(), EmailsAdapter.OnItemTap {
+class EmailsFragment : Fragment(),
+    EmailsAdapter.OnItemTap {
     val allowedContentTypes =
         arrayOf("application/pdf", "application/png", "application/jpeg", "application/jpg")
     val displayFields = arrayOf(
@@ -50,7 +55,9 @@ class EmailsFragment : Fragment(), EmailsAdapter.OnItemTap {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        getSyphtClient(context)
+        getSyphtClient(
+            context
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -64,7 +71,11 @@ class EmailsFragment : Fragment(), EmailsAdapter.OnItemTap {
             override fun success(page: IMessageCollectionPage) {
                 Log.d("MESSAGES", "Recent: " + page.rawObject.toString())
                 activity?.runOnUiThread {
-                    recyclerView.adapter = EmailsAdapter(page.currentPage, this@EmailsFragment)
+                    recyclerView.adapter =
+                        EmailsAdapter(
+                            page.currentPage,
+                            this@EmailsFragment
+                        )
                 }
                 page.currentPage.forEach { message ->
                     val emailId = message.id
@@ -146,7 +157,7 @@ class EmailsFragment : Fragment(), EmailsAdapter.OnItemTap {
 
         private lateinit var sypht: SyphtClient
         fun getSyphtClient(context: Context): SyphtClient {
-            if (!::sypht.isInitialized)
+            if (!Companion::sypht.isInitialized)
                 sypht = SyphtClient(
                     BasicCredentialProvider(
                         context.getString(R.string.sypht_client_id),

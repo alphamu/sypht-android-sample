@@ -1,4 +1,4 @@
-package com.alimuzaffar.sypht.onedrive
+package com.alimuzaffar.sypht.onedrive.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import com.alimuzaffar.sypht.onedrive.R
 
 class HomeFragment : Fragment() {
     private var mUserName: String? = null

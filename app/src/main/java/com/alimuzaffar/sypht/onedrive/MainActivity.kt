@@ -18,6 +18,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.alimuzaffar.sypht.onedrive.fragment.CalendarFragment
+import com.alimuzaffar.sypht.onedrive.fragment.EmailsFragment
+import com.alimuzaffar.sypht.onedrive.fragment.HomeFragment
+import com.alimuzaffar.sypht.onedrive.util.AuthenticationHelper
+import com.alimuzaffar.sypht.onedrive.util.GraphHelper
+import com.alimuzaffar.sypht.onedrive.util.Prefs
 import com.google.android.material.navigation.NavigationView
 import com.microsoft.graph.concurrency.ICallback
 import com.microsoft.graph.core.ClientException
@@ -157,7 +163,9 @@ class MainActivity : AppCompatActivity(),
     // Load the "Calendar" fragment
     private fun openCalendarFragment() {
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, CalendarFragment())
+            .replace(R.id.fragment_container,
+                CalendarFragment()
+            )
             .commit()
         mNavigationView.setCheckedItem(R.id.nav_calendar)
     }

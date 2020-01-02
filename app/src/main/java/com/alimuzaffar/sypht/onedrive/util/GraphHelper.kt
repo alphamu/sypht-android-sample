@@ -1,4 +1,4 @@
-package com.alimuzaffar.sypht.onedrive
+package com.alimuzaffar.sypht.onedrive.util
 
 import com.microsoft.graph.authentication.IAuthenticationProvider
 import com.microsoft.graph.concurrency.ICallback
@@ -80,7 +80,8 @@ class GraphHelper private constructor() : IAuthenticationProvider {
         val instance: GraphHelper?
             get() {
                 if (INSTANCE == null) {
-                    INSTANCE = GraphHelper()
+                    INSTANCE =
+                        GraphHelper()
                 }
                 return INSTANCE
             }

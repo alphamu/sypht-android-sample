@@ -1,8 +1,8 @@
-package com.alimuzaffar.sypht.onedrive
+package com.alimuzaffar.sypht.onedrive.util
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.alimuzaffar.sypht.onedrive.Prefs.Key.ACCESS_TOKEN
+import com.alimuzaffar.sypht.onedrive.util.Prefs.Key.ACCESS_TOKEN
 
 /*
  * A Singleton for managing your SharedPreferences.
@@ -222,15 +222,16 @@ class Prefs private constructor(context: Context) {
         private const val SETTINGS_NAME = "default_settings"
         private lateinit var sSharedPrefs: Prefs
         fun init(context: Context): Prefs? {
-            if (!::sSharedPrefs.isInitialized) {
-                sSharedPrefs = Prefs(context.applicationContext)
+            if (!Companion::sSharedPrefs.isInitialized) {
+                sSharedPrefs =
+                    Prefs(context.applicationContext)
             }
             return sSharedPrefs
         }
         @get:Synchronized
         val instance: Prefs
             get() {
-                if (::sSharedPrefs.isInitialized) {
+                if (Companion::sSharedPrefs.isInitialized) {
                     return sSharedPrefs
                 }
                 throw IllegalArgumentException("Should use getInstance(Context) at least once before using this method.")
