@@ -11,10 +11,10 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.alimuzaffar.sypht.onedrive.adapter.EmailsAdapter
-import com.alimuzaffar.sypht.onedrive.util.GraphHelper
 import com.alimuzaffar.sypht.onedrive.MainActivity
 import com.alimuzaffar.sypht.onedrive.R
+import com.alimuzaffar.sypht.onedrive.adapter.EmailsAdapter
+import com.alimuzaffar.sypht.onedrive.util.GraphHelper
 import com.microsoft.graph.concurrency.ICallback
 import com.microsoft.graph.core.ClientException
 import com.microsoft.graph.models.extensions.Message
@@ -39,7 +39,7 @@ class EmailsFragment : Fragment(),
         "invoice.amountDue",
         "invoice.dueDate"
     )
-    val mapIds = mutableMapOf<String, String>()
+    val mapIds = mutableMapOf<String, String?>()
 
     private lateinit var recyclerView: RecyclerView
 
@@ -71,6 +71,8 @@ class EmailsFragment : Fragment(),
             override fun success(page: IMessageCollectionPage) {
                 Log.d("MESSAGES", "Recent: " + page.rawObject.toString())
                 activity?.runOnUiThread {
+                    (activity as MainActivity).showProgressBar()
+                    recyclerView.visibility = View.INVISIBLE
                     recyclerView.adapter =
                         EmailsAdapter(
                             page.currentPage,
@@ -91,9 +93,18 @@ class EmailsFragment : Fragment(),
                                         val bytes = Base64.decode(contentBytes, Base64.NO_WRAP)
                                         val stream = ByteArrayInputStream(bytes)
                                         GlobalScope.launch {
+                                            mapIds[emailId] = null
                                             val syphtId = sendToSypht(attachmentName, stream)
                                             mapIds[emailId] = syphtId
                                             //No need to close the stream, the SDk does this for us.
+                                            activity?.runOnUiThread {
+                                                recyclerView.visibility =
+                                                    if (mapIds.values.any { v ->
+                                                            v == null
+                                                        }) View.INVISIBLE else {
+                                                        (activity as MainActivity).hideProgressBar(); View.VISIBLE
+                                                    }
+                                            }
                                         }
                                     }
                                 }
@@ -121,7 +132,7 @@ class EmailsFragment : Fragment(),
 
     override fun onItemTap(message: Message) {
         val sid = mapIds[message.id]
-        if (sid != null) {
+        if (mapIds.containsKey(message.id) && sid != null) {
             (activity as MainActivity).showProgressBar()
             GlobalScope.launch {
                 var display = ""
@@ -144,8 +155,18 @@ class EmailsFragment : Fragment(),
                     }
                 }
             }
+        } else if (mapIds.containsKey(message.id)) {
+            Toast.makeText(
+                context,
+                "Attachment still uploading.",
+                Toast.LENGTH_SHORT
+            ).show()
         } else {
-            Toast.makeText(context, "Attachment still uploading, or not is a PDF or Image.", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                "No PDF or image attachment.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
     }
