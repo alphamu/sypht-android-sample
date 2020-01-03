@@ -3,6 +3,7 @@ package com.alimuzaffar.sypht.onedrive.adapter;
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.alimuzaffar.sypht.onedrive.R
@@ -19,7 +20,7 @@ class EmailsAdapter(var myDataset: List<Email>, private val onTap: OnItemTap) :
         val subject = layout.findViewById<TextView>(R.id.subject)
         val from = layout.findViewById<TextView>(R.id.from)
         val received = layout.findViewById<TextView>(R.id.received)
-        val processing = layout.findViewById<TextView>(R.id.processing)
+        val processing = layout.findViewById<ProgressBar>(R.id.processing)
     }
 
 

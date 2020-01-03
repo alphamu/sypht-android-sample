@@ -48,6 +48,7 @@ class EmailsFragment : Fragment(),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         adapter = EmailsAdapter(mutableListOf(), this)
+        recyclerView.adapter = adapter
         EmailRepo.get().getEmails().observe(this, Observer {
             adapter.myDataset = it
             adapter.notifyDataSetChanged()
@@ -57,28 +58,32 @@ class EmailsFragment : Fragment(),
 
     override fun onItemTap(email: Email) {
         if (!email.finished) {
-            Toast.makeText(context, "Attachments are still being processed.", Toast.LENGTH_SHORT).show()
+            toastOnUiThread("Attachments are still being processed.", Toast.LENGTH_SHORT)
             return
         }
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             val attachments = AttachmentRepo.get().getAttachments(email.id)
             if (attachments.isNotEmpty()) {
                 val emailId = attachments[0].emailId
-                val validAttachments = attachments.filter { allowedContentTypes.contains(it.contentType) }
+                val validAttachments =
+                    attachments.filter { allowedContentTypes.contains(it.contentType) }
                 if (validAttachments.isEmpty()) {
-                    Toast.makeText(context, "No PDF or image attachments.", Toast.LENGTH_SHORT).show()
+                    toastOnUiThread("No PDF or image attachments.", Toast.LENGTH_SHORT)
                     return@launch
                 }
 
                 val validAndUploaded = validAttachments.filter { it.uploaded }
                 if (validAndUploaded.isEmpty() || validAndUploaded.size != validAttachments.size) {
-                    Toast.makeText(context, "Attachments are still uploading to sypht.", Toast.LENGTH_SHORT).show()
+                    toastOnUiThread(
+                        "Attachments are still uploading to sypht.",
+                        Toast.LENGTH_SHORT
+                    )
                     return@launch
                 }
 
                 val results = SyphtRepo.get().getFinalisedResults(emailId)
                 if (results.isEmpty()) {
-                    Toast.makeText(context, "Sypht is processing results.", Toast.LENGTH_SHORT).show()
+                    toastOnUiThread("Sypht is processing results.", Toast.LENGTH_SHORT)
                     return@launch
                 }
                 var display = ""
@@ -88,11 +93,14 @@ class EmailsFragment : Fragment(),
                     }
                     display += generateDisplayString(it.result!!)
                 }
-
+                toastOnUiThread(display, Toast.LENGTH_LONG)
             } else {
                 // Since we only request emails with extensions
                 // If there is nothing here, we probably haven't download the attachments yet.
-                Toast.makeText(context, "Attachments are still downloading for this email.", Toast.LENGTH_SHORT).show()
+                toastOnUiThread(
+                    "Attachments are still downloading for this email.",
+                    Toast.LENGTH_SHORT
+                )
             }
         }
     }
@@ -114,6 +122,12 @@ class EmailsFragment : Fragment(),
             Log.d("SYPHT", display)
         }
         return display
+    }
+
+    private fun toastOnUiThread(display: String, length: Int) {
+        CoroutineScope(Dispatchers.Main).launch {
+            Toast.makeText(context, display, length).show()
+        }
     }
 
     companion object {

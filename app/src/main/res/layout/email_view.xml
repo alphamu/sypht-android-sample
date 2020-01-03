@@ -37,9 +37,13 @@
         android:textSize="12dp" />
 
     <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
         android:id="@+id/processing"
         android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:visibility="invisible"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        android:layout_below="@+id/subject"
+        android:layout_marginTop="4dp"
         android:indeterminate="true" />
+
 </RelativeLayout>

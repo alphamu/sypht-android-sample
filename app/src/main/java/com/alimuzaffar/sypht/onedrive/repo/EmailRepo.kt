@@ -16,7 +16,8 @@ import java.text.SimpleDateFormat
 class EmailRepo {
     private val displayDate = SimpleDateFormat.getDateInstance()
     private val dao = TheDatabase.instance.emailDao()
-    private val attachmentRepo = AttachmentRepo.get()
+    private lateinit var attachmentRepo: AttachmentRepo
+
     fun getEmails(): LiveData<List<Email>> {
         fetchEmails()
         return dao.getAllEmails()
@@ -56,6 +57,9 @@ class EmailRepo {
             val count = dao.contains(id)
             if (count == 0L) {
                 dao.addEmail(Email(id, subject, from, received))
+                if (!::attachmentRepo.isInitialized) {
+                    attachmentRepo = AttachmentRepo.get()
+                }
                 attachmentRepo.fetchAttachments(id)
             }
         }

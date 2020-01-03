@@ -2,11 +2,10 @@ package com.alimuzaffar.sypht.onedrive.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "email")
-class Email @Ignore constructor(
+class Email constructor(
     @field:ColumnInfo(name = "id") @field:PrimaryKey val id: String,
     @field:ColumnInfo(name = "subject") val subject: String,
     @field:ColumnInfo(name = "from") val from: String,
