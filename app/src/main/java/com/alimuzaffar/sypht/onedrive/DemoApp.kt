@@ -7,7 +7,7 @@ import com.alimuzaffar.sypht.onedrive.repo.SyphtRepo
 class DemoApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        TheDatabase.get(this).clearAll()
+        TheDatabase.get(this)
         SyphtRepo.init(getString(R.string.sypht_client_id), getString(R.string.sypht_client_secret))
 
     }
