@@ -23,8 +23,8 @@ class EmailRepo {
         return dao.getAllEmails()
     }
 
-    fun updateProcessing(emailId: String, finished: Boolean) {
-        dao.updateProcessing(emailId, finished)
+    fun updateProcessing(emailId: String, received: String, finished: Boolean) {
+        dao.updateProcessing(emailId, received, finished)
     }
 
     private fun fetchEmails() {
@@ -41,6 +41,7 @@ class EmailRepo {
                         val from =
                             if (emailAddress.name.isNotBlank()) emailAddress.name else emailAddress.address
                         val received = displayDate.format(message.receivedDateTime.time)
+                        Log.d("EMAILID", "$from - $emailId")
                         setEmail(emailId, subject, from, received)
                     }
                 }
@@ -55,12 +56,13 @@ class EmailRepo {
     private fun setEmail(id: String, subject: String, from: String, received: String) {
         CoroutineScope(Dispatchers.IO).launch {
             val count = dao.contains(id)
+            Log.d("SETEMAIL", "$count - $received - ${id.substring(id.length - 10)}")
             if (count == 0L) {
                 dao.addEmail(Email(id, subject, from, received))
                 if (!::attachmentRepo.isInitialized) {
                     attachmentRepo = AttachmentRepo.get()
                 }
-                attachmentRepo.fetchAttachments(id)
+                attachmentRepo.fetchAttachments(id, received)
             }
         }
     }

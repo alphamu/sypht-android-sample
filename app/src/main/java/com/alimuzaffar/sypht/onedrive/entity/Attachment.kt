@@ -13,5 +13,6 @@ class Attachment constructor(
     @field:ColumnInfo(name = "content_type") val contentType: String,
     @field:ColumnInfo(name = "content_bytes") val contentBytes: String,
     @field:ColumnInfo(name = "uploaded") var uploaded: Boolean = false,
-    @field:ColumnInfo(name = "skip") var skip: Boolean = false
+    @field:ColumnInfo(name = "skip") var skip: Boolean = false,
+    @field:ColumnInfo(name = "email_received") var received: String
 )

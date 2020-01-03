@@ -10,5 +10,5 @@ class Email constructor(
     @field:ColumnInfo(name = "subject") val subject: String,
     @field:ColumnInfo(name = "from") val from: String,
     @field:ColumnInfo(name = "received") val received: String,
-    @field:ColumnInfo(name = "processing_finished") var finished: Boolean = false
+    @field:ColumnInfo(name = "processing_finished") var finished: Boolean = true
 )

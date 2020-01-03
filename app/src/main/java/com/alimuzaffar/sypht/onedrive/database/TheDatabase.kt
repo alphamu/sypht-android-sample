@@ -17,12 +17,13 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [
-        Email::class, Attachment::class, SyphtResult::class], version = 1
+        Email::class, Attachment::class, SyphtResult::class], version = 2
 )
 abstract class TheDatabase : RoomDatabase() {
 
     // --- DAO ---
     abstract fun emailDao(): EmailDao
+
     abstract fun attachmentDao(): AttachmentDao
     abstract fun syphtDao(): SyphtDao
 
@@ -33,6 +34,7 @@ abstract class TheDatabase : RoomDatabase() {
             syphtDao().clearAll()
         }
     }
+
     companion object {
         lateinit var instance: TheDatabase
 
@@ -41,7 +43,7 @@ abstract class TheDatabase : RoomDatabase() {
                 instance = Room.databaseBuilder<TheDatabase>(
                     context.applicationContext,
                     TheDatabase::class.java, "sypht.db"
-                ).build()
+                ).fallbackToDestructiveMigration().build()
             }
             return instance
         }

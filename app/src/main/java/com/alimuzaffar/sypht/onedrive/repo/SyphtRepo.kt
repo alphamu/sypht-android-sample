@@ -44,13 +44,13 @@ class SyphtRepo(syphtClientId: String, syphtClientSecret: String) {
                         syphtResult.result = it
                         dao.update(syphtResult)
                     }
-                    emailRepo.updateProcessing(attachment.emailId, true)
+                    emailRepo.updateProcessing(attachment.emailId, attachment.received,true)
                 }
             }
         } else {
             attachment.skip = true
             attachmentDao.updateAttachment(attachment)
-            emailRepo.updateProcessing(attachment.emailId, true)
+            emailRepo.updateProcessing(attachment.emailId, attachment.received,true)
         }
     }
 

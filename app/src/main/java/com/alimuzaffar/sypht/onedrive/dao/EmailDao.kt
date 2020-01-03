@@ -21,8 +21,8 @@ interface EmailDao {
     @Update
     fun updateEmail(email: Email)
 
-    @Query("UPDATE email SET processing_finished = :finished WHERE id = :emailId")
-    fun updateProcessing(emailId: String, finished: Boolean)
+    @Query("UPDATE email SET processing_finished = :finished WHERE received = :received AND id = :emailId")
+    fun updateProcessing(emailId: String, received: String, finished: Boolean)
 
     @Query("DELETE FROM email")
     fun clearAll()

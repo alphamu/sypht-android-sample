@@ -97,10 +97,7 @@ class EmailsFragment : Fragment(),
             } else {
                 // Since we only request emails with extensions
                 // If there is nothing here, we probably haven't download the attachments yet.
-                toastOnUiThread(
-                    "Attachments are still downloading for this email.",
-                    Toast.LENGTH_SHORT
-                )
+                toastOnUiThread("No PDF or image attachment found.", Toast.LENGTH_SHORT)
             }
         }
     }
