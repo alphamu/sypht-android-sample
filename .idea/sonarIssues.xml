@@ -33,6 +33,11 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/DemoApp.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/Email.java">
           <value>
             <set />
@@ -93,6 +98,56 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/dao/AttachmentDao.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/dao/EmailDao.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/dao/SyphtDao.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/database/TheDatabase.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/db/NoteDatabase.java">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/entity/Attachment.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/entity/Email.java">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/entity/Email.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/entity/SyphtResult.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/entity/User.java">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/fragment/EmailsFragment.kt">
           <value>
             <set />
@@ -103,7 +158,47 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/repo/AttachmentRepo.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/repo/EmailRepo.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/repo/MemberRepository.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/repo/NoteDatabase.java">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/repo/NoteRepository.java">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/repo/SyphtRepo.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/util/AllowedContentTypes.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/util/AuthenticationHelper.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/alimuzaffar/sypht/onedrive/util/Constants.kt">
           <value>
             <set />
           </value>
@@ -189,6 +284,11 @@
           </value>
         </entry>
         <entry key="$PROJECT_DIR$/local.properties">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../member_android/app/src/main/java/com/sonder/member/android/database/TheDatabase.kt">
           <value>
             <set />
           </value>

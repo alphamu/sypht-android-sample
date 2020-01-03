@@ -6,13 +6,11 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.alimuzaffar.sypht.onedrive.R
-import com.microsoft.graph.models.extensions.Message
-import java.text.SimpleDateFormat
+import com.alimuzaffar.sypht.onedrive.entity.Email
 
-class EmailsAdapter(private val myDataset: List<Message>, private val onTap: OnItemTap) :
+class EmailsAdapter(var myDataset: List<Email>, private val onTap: OnItemTap) :
         RecyclerView.Adapter<EmailsAdapter.EmailsViewHolder>(), View.OnClickListener {
 
-    val displayDate = SimpleDateFormat.getDateInstance()
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder.
@@ -21,6 +19,7 @@ class EmailsAdapter(private val myDataset: List<Message>, private val onTap: OnI
         val subject = layout.findViewById<TextView>(R.id.subject)
         val from = layout.findViewById<TextView>(R.id.from)
         val received = layout.findViewById<TextView>(R.id.received)
+        val processing = layout.findViewById<TextView>(R.id.processing)
     }
 
 
@@ -40,13 +39,13 @@ class EmailsAdapter(private val myDataset: List<Message>, private val onTap: OnI
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         val data = myDataset[position]
-        val emailAddress = data.sender.emailAddress
         holder.subject.text = data.subject
 
-        holder.from.text = if (emailAddress.name.isNotBlank()) emailAddress.name else emailAddress.address
-        holder.received.text = displayDate.format(data.receivedDateTime.time)
+        holder.from.text = data.from
+        holder.received.text = data.received
+        holder.processing.visibility = if (data.finished) View.INVISIBLE else View.VISIBLE
 
-        holder.layout.tag = myDataset[position]
+        holder.layout.tag = data
         holder.layout.setOnClickListener(this)
     }
 
@@ -54,10 +53,10 @@ class EmailsAdapter(private val myDataset: List<Message>, private val onTap: OnI
     override fun getItemCount() = myDataset.size
 
     interface OnItemTap {
-        fun onItemTap(message: Message)
+        fun onItemTap(email: Email)
     }
 
     override fun onClick(v: View?) {
-        onTap.onItemTap(v?.tag as Message)
+        onTap.onItemTap(v?.tag as Email)
     }
 }

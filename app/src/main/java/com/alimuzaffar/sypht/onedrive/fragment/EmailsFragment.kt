@@ -1,38 +1,29 @@
 package com.alimuzaffar.sypht.onedrive.fragment
 
-import android.content.Context
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.alimuzaffar.sypht.onedrive.MainActivity
 import com.alimuzaffar.sypht.onedrive.R
 import com.alimuzaffar.sypht.onedrive.adapter.EmailsAdapter
-import com.alimuzaffar.sypht.onedrive.util.GraphHelper
-import com.alimuzaffar.sypht.onedrive.util.MapIds
-import com.microsoft.graph.concurrency.ICallback
-import com.microsoft.graph.core.ClientException
-import com.microsoft.graph.models.extensions.Message
-import com.microsoft.graph.requests.extensions.IAttachmentCollectionPage
-import com.microsoft.graph.requests.extensions.IMessageCollectionPage
-import com.sypht.SyphtClient
-import com.sypht.auth.BasicCredentialProvider
-import kotlinx.coroutines.GlobalScope
+import com.alimuzaffar.sypht.onedrive.entity.Email
+import com.alimuzaffar.sypht.onedrive.repo.AttachmentRepo
+import com.alimuzaffar.sypht.onedrive.repo.EmailRepo
+import com.alimuzaffar.sypht.onedrive.repo.SyphtRepo
+import com.alimuzaffar.sypht.onedrive.util.allowedContentTypes
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import java.io.ByteArrayInputStream
-import java.io.InputStream
 
 class EmailsFragment : Fragment(),
     EmailsAdapter.OnItemTap {
-    val allowedContentTypes =
-        arrayOf("application/pdf", "application/png", "application/jpeg", "application/jpg")
     val displayFields = arrayOf(
         "invoice.tax",
         "invoice.gst",
@@ -40,9 +31,9 @@ class EmailsFragment : Fragment(),
         "invoice.amountDue",
         "invoice.dueDate"
     )
-    private lateinit var mapIds: MapIds
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: EmailsAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -54,153 +45,80 @@ class EmailsFragment : Fragment(),
         return recyclerView
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        getSyphtClient(
-            context
-        )
-        mapIds = MapIds.instance
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        getEmailsWithAttachments()
-    }
-
-    fun getEmailsWithAttachments() {
-        GraphHelper.instance?.getEmailsWithAttachments(object : ICallback<IMessageCollectionPage> {
-            override fun success(page: IMessageCollectionPage) {
-                Log.d("MESSAGES", "Recent: " + page.rawObject.toString())
-                activity?.runOnUiThread {
-                    (activity as MainActivity).showProgressBar()
-                    recyclerView.visibility = View.INVISIBLE
-                    recyclerView.adapter =
-                        EmailsAdapter(
-                            page.currentPage,
-                            this@EmailsFragment
-                        )
-                }
-                page.currentPage.forEach { message ->
-                    val emailId = message.id
-                    if (!mapIds.containsKey(emailId)) {
-                        // Email has not been seen before
-                        // fetch attachments and send to sypht
-                        fetchAttachmentsForEmail(emailId)
-                    }
-                }
-                // If nothing is waiting upload, show the emails list
-                showEmailList()
-
-            }
-
-            override fun failure(ex: ClientException?) {
-                Log.e("MESSAGES", "Error getting /me/messages", ex)
-            }
+        adapter = EmailsAdapter(mutableListOf(), this)
+        EmailRepo.get().getEmails().observe(this, Observer {
+            adapter.myDataset = it
+            adapter.notifyDataSetChanged()
         })
     }
 
-    fun fetchAttachmentsForEmail(emailId: String) {
-        GraphHelper.instance?.getAttachmentsForEmail(
-            emailId,
-            object : ICallback<IAttachmentCollectionPage> {
-                override fun success(attach: IAttachmentCollectionPage) {
-                    attach.currentPage.forEach {
-                        val contentType = it.contentType
-                        if (allowedContentTypes.contains(contentType)) {
-                            mapIds[emailId] =
-                                null //This indicates the file has been encountered, but has not been upload yet
-                            val attachmentName = it.name
-                            val contentBytes = it.rawObject["contentBytes"].asString
-                            val bytes = Base64.decode(contentBytes, Base64.NO_WRAP)
-                            val stream = ByteArrayInputStream(bytes)
-                            GlobalScope.launch {
-                                val syphtId = sendToSypht(attachmentName, stream)
-                                mapIds[emailId] = syphtId
-                                // No need to close the stream, the SDK does this for us.
-                                // If nothing if awaiting upload, show the email list
-                                showEmailList()
-                            }
-                        }
-                    }
-                }
 
-                override fun failure(ex: ClientException?) {
-                    Log.e("ATTACHMENT", "Error getting /me/messages/{}/attachments", ex)
-                }
-            })
-    }
-
-    fun sendToSypht(name: String, inputStream: InputStream): String {
-        val syphtFileId =
-            sypht.upload(name, inputStream, arrayOf("sypht.invoice"))
-        return syphtFileId
-    }
-
-    fun showEmailList() {
-        activity?.runOnUiThread {
-            recyclerView.visibility = if (mapIds.hasLoading()) View.INVISIBLE else {
-                (activity as MainActivity).hideProgressBar(); View.VISIBLE
-            }
+    override fun onItemTap(email: Email) {
+        if (email.processing) {
+            Toast.makeText(context, "Attachments are still being processed.", Toast.LENGTH_SHORT).show()
+            return
         }
-    }
+        CoroutineScope(Dispatchers.Main).launch {
+            val attachments = AttachmentRepo.get().getAttachments(email.id)
+            if (attachments.isNotEmpty()) {
+                val emailId = attachments[0].emailId
+                val validAttachments = attachments.filter { allowedContentTypes.contains(it.contentType) }
+                if (validAttachments.isEmpty()) {
+                    Toast.makeText(context, "No PDF or image attachments.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
 
-    override fun onItemTap(message: Message) {
-        val sid = mapIds[message.id]
-        if (mapIds.containsKey(message.id) && sid != null) {
-            (activity as MainActivity).showProgressBar()
-            GlobalScope.launch {
+                val validAndUploaded = validAttachments.filter { it.uploaded }
+                if (validAndUploaded.isEmpty() || validAndUploaded.size != validAttachments.size) {
+                    Toast.makeText(context, "Attachments are still uploading to sypht.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val results = SyphtRepo.get().getFinalisedResults(emailId)
+                if (results.isEmpty()) {
+                    Toast.makeText(context, "Sypht is processing results.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 var display = ""
-                JSONObject(sypht.result(sid)).takeIf { result ->
-                    result.getString("status") == "FINALISED"
-                }?.let { it ->
-                    val fields = it.getJSONObject("results").getJSONArray("fields")
-                    for (x in 0 until fields.length()) {
-                        val field = fields.getJSONObject(x)
-                        field.getString("name").takeIf { name ->
-                            displayFields.contains(name)
-                        }?.let {
-                            display += "$it ${field.getString("value")}\n"
-                        }
+                results.forEach {
+                    if (display.isNotEmpty()) {
+                        display += "\n\n"
                     }
-                    Log.d("SYPHT", display)
-                    activity?.runOnUiThread {
-                        (activity as MainActivity).hideProgressBar()
-                        Toast.makeText(context, display, Toast.LENGTH_LONG).show()
-                    }
+                    display += generateDisplayString(it.result!!)
+                }
+
+            } else {
+                // Since we only request emails with extensions
+                // If there is nothing here, we probably haven't download the attachments yet.
+                Toast.makeText(context, "Attachments are still downloading for this email.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun generateDisplayString(resultString: String): String {
+        var display = ""
+        JSONObject(resultString).takeIf { result ->
+            result.getString("status") == "FINALISED"
+        }?.let { it ->
+            val fields = it.getJSONObject("results").getJSONArray("fields")
+            for (x in 0 until fields.length()) {
+                val field = fields.getJSONObject(x)
+                field.getString("name").takeIf { name ->
+                    displayFields.contains(name)
+                }?.let { fieldName ->
+                    display += "$fieldName ${field.getString("value")}\n"
                 }
             }
-        } else if (mapIds.containsKey(message.id)) {
-            Toast.makeText(
-                context,
-                "Attachment still uploading.",
-                Toast.LENGTH_SHORT
-            ).show()
-        } else {
-            Toast.makeText(
-                context,
-                "No PDF or image attachment.",
-                Toast.LENGTH_SHORT
-            ).show()
+            Log.d("SYPHT", display)
         }
-
+        return display
     }
 
     companion object {
         fun createInstance(): EmailsFragment {
             return EmailsFragment()
-        }
-
-        private lateinit var sypht: SyphtClient
-        fun getSyphtClient(context: Context): SyphtClient {
-            if (!Companion::sypht.isInitialized)
-                sypht = SyphtClient(
-                    BasicCredentialProvider(
-                        context.getString(R.string.sypht_client_id),
-                        context.getString(R.string.sypht_client_secret)
-                    )
-                )
-            return sypht
         }
     }
 }

@@ -18,12 +18,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.alimuzaffar.sypht.onedrive.database.TheDatabase
 import com.alimuzaffar.sypht.onedrive.fragment.CalendarFragment
 import com.alimuzaffar.sypht.onedrive.fragment.EmailsFragment
 import com.alimuzaffar.sypht.onedrive.fragment.HomeFragment
 import com.alimuzaffar.sypht.onedrive.util.AuthenticationHelper
 import com.alimuzaffar.sypht.onedrive.util.GraphHelper
-import com.alimuzaffar.sypht.onedrive.util.MapIds
 import com.alimuzaffar.sypht.onedrive.util.Prefs
 import com.google.android.material.navigation.NavigationView
 import com.microsoft.graph.concurrency.ICallback
@@ -184,6 +184,7 @@ class MainActivity : AppCompatActivity(),
         setSignedInState(false)
         openHomeFragment(mUserName)
         Prefs.instance.clear()
+        TheDatabase.instance.clearAll()
     }
 
     // Silently sign in - used if there is already a
@@ -239,7 +240,6 @@ class MainActivity : AppCompatActivity(),
                 mUserName = user.displayName
                 mUserEmail = if (user.mail == null) user.userPrincipalName else user.mail
                 Prefs.instance.setEmail(mUserEmail!!)
-                MapIds.init(this@MainActivity.applicationContext)
                 runOnUiThread {
                     hideProgressBar()
                     setSignedInState(true)
