@@ -31,7 +31,7 @@ ext {
 def getBuildEnvVars() {
     Properties properties = new Properties()
     // Default values so our build doesn't break if these are not configured.
-    properties.put("SYPHY_CLIENT_ID", "")
+    properties.put("SYPHT_CLIENT_ID", "")
     properties.put("SYPHT_CLIENT_SECRET", "")
 
     // Read any values in local.properties

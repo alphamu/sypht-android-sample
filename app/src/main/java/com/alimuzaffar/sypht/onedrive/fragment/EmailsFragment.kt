@@ -95,8 +95,9 @@ class EmailsFragment : Fragment(),
                 }
                 toastOnUiThread(display, Toast.LENGTH_LONG)
             } else {
-                // Since we only request emails with extensions
-                // If there is nothing here, we probably haven't download the attachments yet.
+                // Since we save to Room when there is an attachment that can
+                // be uploaded to Sypht, if we are here, that means
+                // the email didn't have an image or PDF attachment.
                 toastOnUiThread("No PDF or image attachment found.", Toast.LENGTH_SHORT)
             }
         }
