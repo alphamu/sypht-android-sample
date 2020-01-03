@@ -56,7 +56,7 @@ class EmailsFragment : Fragment(),
 
 
     override fun onItemTap(email: Email) {
-        if (email.processing) {
+        if (!email.finished) {
             Toast.makeText(context, "Attachments are still being processed.", Toast.LENGTH_SHORT).show()
             return
         }
