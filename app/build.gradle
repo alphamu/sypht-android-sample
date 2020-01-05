@@ -67,8 +67,8 @@ dependencies {
     implementation 'com.microsoft.identity.client:msal:1.0.0'
     implementation 'com.microsoft.graph:microsoft-graph:1.6.0'
 
-    // Required by Sypht client
-    implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    // Sypht client
+    implementation 'com.sypht:sypht-kotlin-client:1.1'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
