@@ -45,8 +45,9 @@ upload to Sypht and parsed as an invoice.
 For the purpose of this project, any field that ends with "\.[0-9]{0,2}" is considered a
 currency field, all currencies are displayed as dollars.
 
+# DEMO
 
-
+[![Sypht to parse email attachments demo](https://img.youtube.com/vi/u9DWoC341xM/0.jpg)](https://www.youtube.com/watch?v=u9DWoC341xM)
 
 
 
