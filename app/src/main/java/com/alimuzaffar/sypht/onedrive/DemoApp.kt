@@ -9,7 +9,7 @@ class DemoApp : Application() {
     override fun onCreate() {
         super.onCreate()
         init(this)
-        TheDatabase.get(this).clearAll()
+        TheDatabase.get(this)
         SyphtRepo.init(getString(R.string.sypht_client_id), getString(R.string.sypht_client_secret))
     }
     companion object {
