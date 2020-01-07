@@ -2,8 +2,10 @@ package com.alimuzaffar.sypht.onedrive.repo
 
 import android.util.Log
 import androidx.lifecycle.LiveData
+import com.alimuzaffar.sypht.onedrive.DemoApp
 import com.alimuzaffar.sypht.onedrive.database.TheDatabase
 import com.alimuzaffar.sypht.onedrive.entity.Email
+import com.alimuzaffar.sypht.onedrive.service.ProcessAttachments
 import com.alimuzaffar.sypht.onedrive.util.GraphHelper
 import com.microsoft.graph.concurrency.ICallback
 import com.microsoft.graph.core.ClientException
@@ -59,10 +61,7 @@ class EmailRepo {
             Log.d("SETEMAIL", "$count - $received - ${id.substring(id.length - 10)}")
             if (count == 0L) {
                 dao.addEmail(Email(id, subject, from, received))
-                if (!::attachmentRepo.isInitialized) {
-                    attachmentRepo = AttachmentRepo.get()
-                }
-                attachmentRepo.fetchAttachments(id, received)
+                ProcessAttachments.startFetchAttachments(DemoApp.ctx, id, received)
             }
         }
     }

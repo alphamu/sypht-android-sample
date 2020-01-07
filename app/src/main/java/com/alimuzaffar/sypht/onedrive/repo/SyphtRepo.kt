@@ -8,9 +8,7 @@ import com.alimuzaffar.sypht.onedrive.entity.SyphtResult
 import com.alimuzaffar.sypht.onedrive.util.allowedContentTypes
 import com.sypht.SyphtClient
 import com.sypht.auth.BasicCredentialProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
@@ -28,24 +26,22 @@ class SyphtRepo(syphtClientId: String, syphtClientSecret: String) {
         return dao.getFinalisedResultsForEmail(emailId)
     }
 
-    fun upload(attachment: Attachment) {
+    suspend fun upload(attachment: Attachment) = withContext(Dispatchers.IO) {
         if (allowedContentTypes.contains(attachment.contentType)) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val bytes = Base64.decode(attachment.contentBytes, Base64.NO_WRAP)
-                val stream = ByteArrayInputStream(bytes)
-                val syphtId = sendToSypht(attachment.name, stream)
-                attachment.syphtId = syphtId
-                attachment.uploaded = !syphtId.isNullOrEmpty()
-                attachmentDao.updateAttachment(attachment)
-                if (syphtId != null) {
-                    val syphtResult = SyphtResult(syphtId, attachment.id, attachment.emailId)
-                    dao.add(syphtResult)
-                    getResultFromSypht(syphtId)?.let {
-                        syphtResult.result = it
-                        dao.update(syphtResult)
-                    }
-                    emailRepo.updateProcessing(attachment.emailId, attachment.received,true)
+            val bytes = Base64.decode(attachment.contentBytes, Base64.NO_WRAP)
+            val stream = ByteArrayInputStream(bytes)
+            val syphtId = sendToSypht(attachment.name, stream)
+            attachment.syphtId = syphtId
+            attachment.uploaded = !syphtId.isNullOrEmpty()
+            attachmentDao.updateAttachment(attachment)
+            if (syphtId != null) {
+                val syphtResult = SyphtResult(syphtId, attachment.id, attachment.emailId)
+                dao.add(syphtResult)
+                getResultFromSypht(syphtId)?.let {
+                    syphtResult.result = it
+                    dao.update(syphtResult)
                 }
+                emailRepo.updateProcessing(attachment.emailId, attachment.received,true)
             }
         } else {
             attachment.skip = true
@@ -53,6 +49,19 @@ class SyphtRepo(syphtClientId: String, syphtClientSecret: String) {
             emailRepo.updateProcessing(attachment.emailId, attachment.received,true)
         }
     }
+
+    fun uploadAsync(attachment: Attachment) {
+        CoroutineScope(Dispatchers.IO).launch {
+            upload(attachment)
+        }
+    }
+
+    fun uploadSync(attachment: Attachment) {
+        runBlocking {
+            upload(attachment)
+        }
+    }
+
 
     private fun sendToSypht(name: String, inputStream: InputStream): String? {
         try {

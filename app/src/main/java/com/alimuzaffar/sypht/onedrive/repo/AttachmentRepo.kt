@@ -8,9 +8,9 @@ import com.alimuzaffar.sypht.onedrive.util.allowedContentTypes
 import com.microsoft.graph.concurrency.ICallback
 import com.microsoft.graph.core.ClientException
 import com.microsoft.graph.requests.extensions.IAttachmentCollectionPage
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class AttachmentRepo {
     private val dao = TheDatabase.instance.attachmentDao()
@@ -21,44 +21,48 @@ class AttachmentRepo {
         return dao.getAllAttachments(emailId)
     }
 
-    fun fetchAttachments(emailId: String, received: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            GraphHelper.instance?.getAttachmentsForEmail(
-                emailId,
-                object : ICallback<IAttachmentCollectionPage> {
-                    override fun success(attach: IAttachmentCollectionPage) {
-                        attach.currentPage.forEach {
-                            val contentType = it.contentType
-                            Log.d("GOTATTACHMENT", "${emailId.substring(emailId.length - 10)} - $contentType")
-                            val attachmentName = it.name
-                            val contentBytes = it.rawObject["contentBytes"].asString
-                            val attachment = Attachment(
-                                it.id,
-                                emailId,
-                                null,
-                                attachmentName,
-                                contentType,
-                                contentBytes,
-                                uploaded = false,
-                                skip = false,
-                                received = received
-                            )
-                            if (allowedContentTypes.contains(contentType)) {
-                                emailRepo.updateProcessing(emailId, received, false)
-                                dao.addAttachment(attachment)
-                                syphtRepo.upload(attachment)
-                            } else {
-                                emailRepo.updateProcessing(emailId, received, true)
-                            }
+    fun fetchAttachmentsSync(emailId: String, received: String) {
+        runBlocking {
+            fetchAttachments(emailId, received)
+        }
+    }
+
+    suspend fun fetchAttachments(emailId: String, received: String) = withContext(Dispatchers.IO) {
+        GraphHelper.instance?.getAttachmentsForEmail(
+            emailId,
+            object : ICallback<IAttachmentCollectionPage> {
+                override fun success(attach: IAttachmentCollectionPage) {
+                    attach.currentPage.forEach {
+                        val contentType = it.contentType
+                        Log.d("GOTATTACHMENT", "${emailId.substring(emailId.length - 10)} - $contentType")
+                        val attachmentName = it.name
+                        val contentBytes = it.rawObject["contentBytes"].asString
+                        val attachment = Attachment(
+                            it.id,
+                            emailId,
+                            null,
+                            attachmentName,
+                            contentType,
+                            contentBytes,
+                            uploaded = false,
+                            skip = false,
+                            received = received
+                        )
+                        if (allowedContentTypes.contains(contentType)) {
+                            emailRepo.updateProcessing(emailId, received, false)
+                            dao.addAttachment(attachment)
+                            SyphtRepo.get().uploadSync(attachment)
+                        } else {
+                            emailRepo.updateProcessing(emailId, received, true)
                         }
                     }
+                }
 
-                    override fun failure(ex: ClientException?) {
-                        Log.e("ATTACHMENT", "Error getting /me/messages/{}/attachments", ex)
-                    }
-                })
+                override fun failure(ex: ClientException?) {
+                    Log.e("ATTACHMENT", "Error getting /me/messages/{}/attachments", ex)
+                }
+            })
 
-        }
     }
 
 
